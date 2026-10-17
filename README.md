@@ -1,0 +1,2 @@
+# mimfak
+ders programı
