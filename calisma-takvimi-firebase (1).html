@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ortak Çalışma Takvimi</title>
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--ink:#1d1d1b;--mute:#76736b;--line:#e4e0d6;--acc:#2f6f5e;--accbg:#d6ebe3;--all:#f2c14e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171815;--card:#222320;--ink:#efede6;--mute:#9a978d;--line:#34352f;--acc:#5fb59d;--accbg:#27453c;--all:#c99a2a}}
+:root[data-theme="dark"]{--bg:#171815;--card:#222320;--ink:#efede6;--mute:#9a978d;--line:#34352f;--acc:#5fb59d;--accbg:#27453c;--all:#c99a2a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 14px 40px}
+h1{font-size:1.35rem;margin:0 0 4px}
+p.sub{margin:0 0 16px;color:var(--mute);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.card h2{font-size:.95rem;margin:0 0 10px}
+input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:4px;width:100%;min-width:420px}
+th{font-size:.78rem;color:var(--mute);font-weight:600;padding:2px}
+th.slot,td.slot{text-align:left;white-space:nowrap;font-size:.8rem;color:var(--mute);padding-right:6px}
+td{padding:0}
+button.cell{width:100%;height:42px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+button.cell.on{background:var(--accbg);border-color:var(--acc);color:var(--acc);font-weight:700}
+.cnt{display:flex;align-items:center;justify-content:center;height:42px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-size:.85rem;color:var(--mute)}
+.cnt.some{color:var(--ink);background:var(--accbg)}
+.cnt.all{background:var(--all);color:#1d1d1b;font-weight:700;border-color:transparent}
+.people{display:flex;flex-wrap:wrap;gap:6px;font-size:.85rem}
+.chip{padding:3px 10px;border-radius:99px;background:var(--accbg);color:var(--acc)}
+.msg{color:var(--mute);font-size:.9rem}
+.best{font-size:.95rem}
+.task{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
+.task label{display:flex;gap:8px;align-items:center;flex:1;min-width:0}
+.task input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc);flex:none}
+.task .dn{text-decoration:line-through;color:var(--mute)}
+.task select{max-width:42%;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem}
+details{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:8px}
+details.now{border-color:var(--acc)}
+details.past{opacity:.6}
+summary{cursor:pointer;font-weight:600;font-size:.92rem}
+.cnt.blk{background:transparent;border-style:dashed;font-size:.75rem}
+.sec{font-weight:700;font-size:.95rem;margin:16px 0 8px}
+.cnt.blk{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 3px}
+.task input[type=text],.task input[type=date]{padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem;min-width:0}
+.task input[type=text]{flex:1}
+#cgrid .cnt{cursor:pointer;height:34px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Ortak Çalışma Takvimi</h1>
+  <p class="sub">Kendi adını yaz, müsait olduğun gün ve saatlere dokun. Değişiklikler arkadaşlarında anında görünür. Üçünüz de müsaitse kutu sarı olur.</p>
+
+  <div class="card">
+    <h2>Oda</h2>
+    <div id="setup" class="msg" hidden>Firebase ayarı eksik. Dosyanın başındaki FB bölümünü doldur.</div>
+    <input type="text" id="room" placeholder="Oda kodu: üçünüz de aynısını yazın (uzun olsun)">
+    <button id="join" class="cell" style="margin-top:8px;height:40px">Bağlan</button>
+    <button id="link" class="cell" style="margin-top:8px;height:40px">Davet linkini kopyala</button>
+  </div>
+
+  <div class="card">
+    <h2>Adın</h2>
+    <input type="text" id="name" placeholder="Örn. Elif" maxlength="20" autocomplete="off">
+  </div>
+
+  <div class="card">
+    <h2>Senin müsaitliğin</h2>
+    <div class="scroll"><table id="mine"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Ortak müsaitlik</h2>
+    <div class="scroll"><table id="all"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>En uygun zamanlar</h2>
+    <div id="best" class="best msg">Henüz kimse işaretlemedi.</div>
+    <div class="people" id="people" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h2>Görevler</h2>
+    <div id="tasks"></div>
+  </div>
+  <div class="card">
+    <h2>Yeni ders ekle</h2>
+    <p class="msg" style="margin:0 0 8px">Sadece senin veya arkadaşlarının aldığı bir ders için. Ders saatlerini işaretle. Sen eklediğinde dersi sen almış olursun. Diğerleri "Ben de alıyorum" diyerek katılır, o saatlerde müsait sayılmazlar.</p>
+    <input type="text" id="cname" placeholder="Ders adı" maxlength="40">
+    <div class="scroll"><table id="cgrid"></table></div>
+    <button id="cadd" class="cell on" style="margin-top:8px;height:40px">Dersi ekle</button>
+  </div>
+  <div id="status" class="msg"></div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const DAYS=["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+const FULL=["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
+const SLOTS=["Sabah","Öğle","Akşam"];
+// FIREBASE AYARI: Firebase konsolundaki web uygulaması ayarlarını buraya yapıştır
+const FB={apiKey:"",authDomain:"",projectId:"",appId:""};
+const LS="ct-fire-v1";
+let me=localStorage.getItem(LS+"id");if(!me){me="u"+Math.random().toString(36).slice(2,10);localStorage.setItem(LS+"id",me);}
+const clean=r=>(r||"").toLowerCase().replace(/[^a-z0-9-]/g,"");
+let room=clean(decodeURIComponent(location.hash.slice(1)))||clean(localStorage.getItem(LS+"room"));
+let mine={name:"",slots:[]},everyone={},courses={},db=null;
+const P=n=>"rooms/"+room+"/"+n;
+const rebuild=()=>{everyone[me]={...mine,id:me};};
+const busy=(pid,k)=>Object.values(courses).some(c=>(c.members||[]).includes(pid)&&(c.times||[]).includes(k));
+const blk=(k,pid)=>{const c=Object.values(courses).find(c=>(c.members||[]).includes(pid)&&(c.times||[]).includes(k));return BLOCK.get(k)||(c?esc(c.name):null);};
+const $=id=>document.getElementById(id);
+const key=(d,s)=>d+"-"+s;
+const BLOCK=new Map([["0-1","Stüdyo"],["3-1","Stüdyo"],["1-1","Uygulama"],["4-0","Uygulama"]]);
+
+function head(){return "<tr><th></th>"+DAYS.map(d=>"<th>"+d+"</th>").join("")+"</tr>";}
+
+function renderMine(){
+  let h=head();
+  SLOTS.forEach((s,si)=>{
+    h+="<tr><td class='slot'>"+s+"</td>";
+    DAYS.forEach((_,di)=>{
+      const bl=blk(key(di,si),me);if(bl){h+="<td><div class='cnt blk'>"+bl+"</div></td>";return;}
+      const on=mine.slots.includes(key(di,si));
+      h+="<td><button class='cell"+(on?" on":"")+"' data-k='"+key(di,si)+"' aria-pressed='"+on+"'>"+(on?"✓":"")+"</button></td>";
+    });
+    h+="</tr>";
+  });
+  $("mine").innerHTML=h;
+}
+
+function renderAll(){
+  const people=Object.values(everyone);
+  const n=people.length;
+  let h=head(),best=[];
+  SLOTS.forEach((s,si)=>{
+    h+="<tr><td class='slot'>"+s+"</td>";
+    DAYS.forEach((_,di)=>{
+      if(BLOCK.has(key(di,si))){h+="<td><div class='cnt blk'>"+BLOCK.get(key(di,si))+"</div></td>";return;}
+      const c=people.filter(p=>(p.slots||[]).includes(key(di,si))&&!busy(p.id,key(di,si))).length;
+      const cls=c===0?"":(n>1&&c===n?"all":"some");
+      if(n>1&&c===n)best.push(FULL[di]+" "+s.toLowerCase());
+      h+="<td><div class='cnt "+cls+"'>"+(c?c+"/"+n:"–")+"</div></td>";
+    });
+    h+="</tr>";
+  });
+  $("all").innerHTML=h;
+  $("best").textContent=best.length?best.join(" · "):(n?"Herkesin aynı anda müsait olduğu bir zaman henüz yok.":"Henüz kimse işaretlemedi.");
+  $("best").className=best.length?"best":"best msg";
+  renderTasks();
+  const pe=$("people");pe.innerHTML="";
+  people.forEach(p=>{const s=document.createElement("span");s.className="chip";s.textContent=p.name||"İsimsiz";pe.appendChild(s);});
+}
+
+function save(){if(db)db.collection(P("people")).doc(me).set({name:mine.name,slots:mine.slots}).catch(()=>{$("status").textContent="Kaydedilemedi, tekrar dene.";});}
+
+$("mine").addEventListener("click",e=>{
+  const b=e.target.closest("button.cell");if(!b)return;
+  const k=b.dataset.k,i=mine.slots.indexOf(k);
+  if(i>=0)mine.slots.splice(i,1);else mine.slots.push(k);
+  renderMine();
+  rebuild();renderAll();
+  save();
+});
+$("name").addEventListener("change",()=>{
+  mine.name=$("name").value.trim();
+  rebuild();renderAll();
+  save();
+});
+
+const TW=[
+["2026-10-05",["Proje gruplarının belirlenmesi","Proje konusu belirlenmesi ve arazi gezisi","Örnek proje inceleme ve sunumu"]],
+["2026-10-12",["Arazi analizi / arazi kesiti","Proje maketi (1/300)","Çıkarım paftaları"]],
+["2026-10-19",["İşlev şeması","Leke eskiz çalışmaları"]],
+["2026-10-26",["Kütle yerleşim kararları","Kütle maketi (29 Ekim tatil)"]],
+["2026-11-02",["Vaziyet planı","Çevre ile iletişim"]],
+["2026-11-09",["Plan çözümleri","Leke"]],
+["2026-11-16",["Plan çözümleri","Kesitler ve görünüşler"]],
+["2026-11-23",["Ara jüri hazırlığı (ara sınav haftası)"]],
+["2026-11-30",["Ara jüri sunumu (30 Kasım ve 3 Aralık)"]],
+["2026-12-07",["Plan çözümleri","Görünüşler, kesitler, vaziyet planı"]],
+["2026-12-14",["Acil durum tahliye planı","Taşıyıcı sistem planı 1/50"]],
+["2026-12-21",["Tavan planı 1/50","Mobilya malzeme paftası 1/20"]],
+["2026-12-28",["Sistem detayı 1/10"]],
+["2027-01-04",["Sistem detayı 1/10"]],
+["2027-01-11",["Teslim paftalarının kontrolü"]]
+];
+const PG=[
+["Hazırlık ve araştırma",["Arsa seçimi (Alanya, imar bilgileri temin edilmiş)","Piyasa araştırması: hedef kitle, konut tipolojisi, anket ve emlakçı görüşmeleri","Maliyet ve kâr hesabı (gerçekçi inşaat maliyeti, satış fiyatı)","Yönetmelik araştırması: imar, yangın, deprem, enerji kimlik belgesi, erişilebilirlik, belediye plan notları"]],
+["Ara sınav teslimi (dijital + basılı A3 kitap)",["Pazarlanabilirlik, ön analiz ve temel kararlar paftası","Saha analizi paftası","Konsept paftası","Yönetmelik paftası","Mimari çizimler: 1/200 vaziyet planı ve silüet kesiti (en az 2), yapı aplikasyon planı, numarataj krokisi ve m² cetveli","Mimari çizimler: 1/50 tefrişli kat planları, 1/50 kesit-görünüşler (biri merdivenden, en az 2)","3B render paftası (en az 4 görüntü, bina ve peyzajın bütünü)","A3 kitap (tek jpg dosyası, kapakta ders kodu, numara, ad soyad) ve renkli basılı hali"]],
+["Final teslimi (ara sınavdakilere ek olarak)",["1/50 cephe çizimleri (en az 4)","1/20 sistem kesiti ve 1/5 nokta detayları","Strüktür paftası (2B ve 3B)","Mekanik paftası (elektrik, sıhhi tesisat, merkezi HVAC varsa)","Enerji verimliliği paftası (enerji kimlik belgesi)","Katalog (projenin lansmanı için)","Sergi için 4 paftalık fotoblok (50x70 dikey, renkli)","Final jürisi sunumu: projeyi müşteriye pazarlama"]]
+];
+let tcol=null,tdoc={};const openW=new Set();
+const d0=s=>new Date(s+"T00:00:00");
+const MO=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function rng(s){const a=d0(s),b=new Date(a);b.setDate(a.getDate()+3);return a.getDate()+(a.getMonth()===b.getMonth()?"":" "+MO[a.getMonth()])+"–"+b.getDate()+" "+MO[b.getMonth()];}
+function curW(){const t=new Date();let c=0;TW.forEach((w,i)=>{if(t>=d0(w[0]))c=i;});return c;}
+function renderTasks(){
+  const c=curW(),box=$("tasks");
+  if(!openW.size){openW.add(c);openW.add(c+1);openW.add(100);openW.add(101);}
+  const names=[...new Set(Object.values(everyone).map(p=>p.name).filter(Boolean))].map(n=>[n,n]);
+  let tot=0,dn=0,h="";
+  TW.forEach((w,i)=>{
+    const ts=w[1].map((t,j)=>{const id="w"+(i+1)+"t"+(j+1),s=tdoc[id]||{};tot++;if(s.done)dn++;
+      return "<div class='task'><label><input type='checkbox' data-t='"+id+"'"+(s.done?" checked":"")+"><span class='"+(s.done?"dn":"")+"'>"+t+"</span></label><select data-o='"+id+"'><option value=''>Kim?</option>"+names.map(n=>"<option value='"+esc(n[0])+"'"+(s.owner===n[0]?" selected":"")+">"+esc(n[1])+"</option>").join("")+"</select></div>";}).join("");
+    h+="<details data-w='"+i+"'"+(openW.has(i)?" open":"")+" class='"+(i<c?"past":i===c?"now":"")+"'><summary>Hafta "+(i+1)+" · "+rng(w[0])+(i===c?" · bu hafta":"")+"</summary>"+ts+"</details>";
+  });
+  const keep={};box.querySelectorAll("input[id^=nt_],input[id^=nd_]").forEach(i=>keep[i.id]=i.value);
+  const opts=o=>"<option value=''>Kim?</option>"+names.map(n=>"<option value='"+esc(n[0])+"'"+(o===n[0]?" selected":"")+">"+esc(n[1])+"</option>").join("");
+  let cs="<div class='sec'>Diğer dersler</div>";
+  if(!Object.keys(courses).length)cs+="<div class='msg'>Henüz ders eklenmedi. Aşağıdaki formdan ekleyebilirsiniz.</div>";
+  Object.entries(courses).forEach(([cid,c])=>{
+    const mem=(c.members||[]).map(m=>(everyone[m]&&everyone[m].name)||"İsimsiz").join(", "),on=(c.members||[]).includes(me);
+    const tm=(c.times||[]).map(k=>{const a=k.split("-");return DAYS[a[0]]+" "+SLOTS[a[1]].toLowerCase();}).join(", ");
+    const ts=Object.entries(tdoc).filter(([,t])=>t.course===cid).sort((a,b)=>(a[1].due||"9").localeCompare(b[1].due||"9")).map(([id,t])=>"<div class='task'><label><input type='checkbox' data-t='"+id+"'"+(t.done?" checked":"")+"><span class='"+(t.done?"dn":"")+"'>"+esc(t.title)+(t.due?" ("+esc(t.due)+")":"")+"</span></label><select data-o='"+id+"'>"+opts(t.owner)+"</select></div>").join("");
+    cs+="<details open><summary>"+esc(c.name)+"</summary><div class='msg'>Alanlar: "+esc(mem||"-")+(tm?" · "+tm:"")+"</div>"+ts+"<div class='task'><input type='text' id='nt_"+cid+"' placeholder='Yeni görev'><input type='date' id='nd_"+cid+"'><button class='cell' data-addt='"+cid+"' style='width:auto;padding:0 12px;height:34px'>Ekle</button></div><button class='cell' data-join='"+cid+"' style='margin-top:6px;height:36px'>"+(on?"Bu dersi bırak":"Ben de alıyorum")+"</button></details>";
+  });
+  let g="";
+  PG.forEach((p,k)=>{
+    const ts=p[1].map((t,j)=>{const id="m"+(k+1)+"t"+(j+1),s=tdoc[id]||{};tot++;if(s.done)dn++;
+      return "<div class='task'><label><input type='checkbox' data-t='"+id+"'"+(s.done?" checked":"")+"><span class='"+(s.done?"dn":"")+"'>"+t+"</span></label><select data-o='"+id+"'><option value=''>Kim?</option>"+names.map(n=>"<option value='"+esc(n[0])+"'"+(s.owner===n[0]?" selected":"")+">"+esc(n[1])+"</option>").join("")+"</select></div>";}).join("");
+    g+="<details data-w='"+(100+k)+"'"+(openW.has(100+k)?" open":"")+"><summary>"+p[0]+"</summary>"+ts+"</details>";
+  });
+  box.innerHTML="<div class='msg' style='margin-bottom:8px'>"+dn+"/"+tot+" görev tamam</div><div class='sec'>Mimari Proje Stüdyosu V (haftalık)</div>"+h+"<div class='sec'>MIM 405 Uygulama Projesi</div>"+g+cs;
+  Object.entries(keep).forEach(([k,v])=>{const el=$(k);if(el)el.value=v;});
+}
+$("tasks").addEventListener("change",e=>{
+  const t=e.target,id=t.dataset.t||t.dataset.o;if(!id)return;
+  const s={...(tdoc[id]||{done:false,owner:""})};
+  if(t.dataset.t)s.done=t.checked;else s.owner=t.value;
+  s.ts=Date.now();tdoc[id]=s;renderTasks();if(db)db.collection(P("tasks")).doc(id).set(s);
+});
+$("tasks").addEventListener("toggle",e=>{const w=e.target.dataset.w;if(w===undefined)return;e.target.open?openW.add(+w):openW.delete(+w);},true);
+
+renderMine();renderAll();
+
+$("room").value=room;
+$("join").onclick=()=>{const r=clean($("room").value);if(!r)return;localStorage.setItem(LS+"room",r);location.hash=r;location.reload();};
+$("link").onclick=async()=>{const u=location.href.split("#")[0]+"#"+room;try{await navigator.clipboard.writeText(u);$("status").textContent="Link kopyalandı. Arkadaşlarına gönder.";}catch(e){$("status").textContent=u;}};
+$("cgrid").innerHTML=head()+SLOTS.map((sl,si)=>"<tr><td class='slot'>"+sl+"</td>"+DAYS.map((_,di)=>"<td><label class='cnt'><input type='checkbox' value='"+key(di,si)+"'></label></td>").join("")+"</tr>").join("");
+$("cadd").onclick=()=>{
+  const name=$("cname").value.trim(),times=[...document.querySelectorAll("#cgrid input:checked")].map(i=>i.value);
+  if(!db){$("status").textContent="Önce odaya bağlan.";return;}
+  if(!name||!times.length){$("status").textContent="Ders adını yaz ve en az bir saat işaretle.";return;}
+  db.collection(P("courses")).add({name,times,members:[me]});
+  $("cname").value="";document.querySelectorAll("#cgrid input").forEach(i=>i.checked=false);
+};
+$("tasks").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b||!db)return;
+  const cd=b.dataset.addt,jn=b.dataset.join;
+  if(cd){const t=$("nt_"+cd).value.trim();if(!t)return;
+    db.collection(P("tasks")).add({course:cd,title:t,due:$("nd_"+cd).value||"",done:false,owner:"",ts:Date.now()});$("nt_"+cd).value="";}
+  if(jn){const on=(courses[jn].members||[]).includes(me),F=firebase.firestore.FieldValue;
+    db.collection(P("courses")).doc(jn).update({members:on?F.arrayRemove(me):F.arrayUnion(me)});}
+});
+(function connect(){
+  rebuild();renderMine();renderAll();
+  if(!FB.projectId||typeof firebase==="undefined"){$("setup").hidden=false;return;}
+  if(!room){$("status").textContent="Bir oda kodu yazıp Bağlan'a bas.";return;}
+  try{firebase.initializeApp(FB);db=firebase.firestore();}catch(e){$("status").textContent="Firebase başlatılamadı.";return;}
+  const err=e=>{$("status").textContent="Bağlantı hatası: "+(e.code||"bilinmiyor");};
+  db.collection(P("people")).onSnapshot(sn=>{
+    everyone={};sn.docs.forEach(d=>{everyone[d.id]={...d.data(),id:d.id};});
+    const m=everyone[me];if(m){mine={name:m.name||"",slots:m.slots||[]};if(document.activeElement!==$("name"))$("name").value=mine.name;}
+    rebuild();renderMine();renderAll();
+  },err);
+  db.collection(P("courses")).onSnapshot(sn=>{courses={};sn.docs.forEach(d=>{courses[d.id]=d.data();});renderMine();renderAll();},err);
+  db.collection(P("tasks")).onSnapshot(sn=>{tdoc={};sn.docs.forEach(d=>{tdoc[d.id]=d.data();});renderTasks();},err);
+})();
+</script>
+</body>
+</html>
